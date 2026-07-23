@@ -1,0 +1,49 @@
+name: ims
+recipe: laravel
+
+config:
+  php: "8.3"
+  via: apache
+  webroot: public
+  database: postgres:16
+  cache: redis
+  xdebug: false
+
+services:
+  appserver:
+    build_as_root:
+      - apt-get update -y
+      - apt-get install -y curl unzip git
+      - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+      - apt-get install -y nodejs
+      - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+  node:
+    type: node:22
+
+  mail:
+    type: mailpit
+
+tooling:
+  composer:
+    service: appserver
+    cmd: composer
+  artisan:
+    service: appserver
+    cmd: php artisan
+  npm:
+    service: appserver
+    cmd: npm
+  npx:
+    service: appserver
+    cmd: npx
+  node:
+    service: appserver
+    cmd: node
+  psql:
+    service: database
+    cmd: psql
+
+proxy:
+  mail:
+    - mail.ims.lndo.site
