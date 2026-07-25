@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Institution;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 
 class InstitutionController extends Controller
 {
@@ -13,9 +14,8 @@ class InstitutionController extends Controller
      */
     public function index()
     {
-        $institutions = Institution::all();
-
-        return Inertia::render('Institutions/Index', [
+        $institutions = Institution::with( 'domains')->get();
+        return Inertia::render('institutions/index', [
             'institutions' => $institutions,
         ]);
     }
@@ -26,7 +26,7 @@ class InstitutionController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('institutions/create');
     }
 
     /**
@@ -35,13 +35,28 @@ class InstitutionController extends Controller
 
     public function store(Request $request)
     {
-        $institution = Institution::create([
-            'id' => uniqid(),
-            'name' => $request->name,
-            'domain' => $request->domain,
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'domain' => [
+                'required',
+                'string',
+                'regex:/^[a-z0-9-]+$/',
+                Rule::unique('domains', 'domain'),
+            ],
         ]);
 
-        return redirect()->back()->with('success', 'Institution created successfully!');
+        $institution = Institution::create([
+            'id' => uniqid(),
+            'name' => $validated['name'],
+        ]);
+
+        $institution->domains()->create([
+            'domain' => $validated['domain'],
+        ]);
+
+        return redirect()
+            ->route('institutions.index')
+            ->with('success', 'Institution created successfully!');
     }
 
 
@@ -75,5 +90,21 @@ class InstitutionController extends Controller
     public function destroy(Institution $institution)
     {
         //
+    }
+    public function checkDomain(Request $request)
+    {
+        $request->validate([
+            'domain' => [
+                'required',
+                'regex:/^[a-z0-9-]+$/',
+            ],
+        ]);
+
+
+        $exists = Domain::where('domain')->exists();
+
+        return response()->json([
+            'available' => !$exists,
+        ]);
     }
 }

@@ -1,0 +1,6 @@
+{
+    "name": "User",
+    "description": "User module.",
+    "enabled": true,
+    "version": "1.0.0"
+}

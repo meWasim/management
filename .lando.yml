@@ -47,3 +47,6 @@ tooling:
 proxy:
   mail:
     - mail.ims.lndo.site
+  appserver:
+    - ims.lndo.site
+    - "*.ims.lndo.site"
